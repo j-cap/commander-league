@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Commander-Liga: Platzierungen erfassen, Punkte prüfen und Rangliste ansehen."><title>Commander League</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="/access.css"></head>
+<body><main>
+<header><div class="brand"><span class="mark" aria-hidden="true">CL</span><div><p class="eyebrow">CASUAL COMMANDER</p><h1>Die Liga am Tisch.</h1></div></div><span class="season">SEASON 2026</span></header>
+<p><a href="/">← Zur Liga</a></p><p id="connection" class="notice" role="status">Liga wird geladen …</p>
+<div class="workspace"><section class="entry" aria-labelledby="entry-title"><div class="section-heading"><span class="step">01</span><h2 id="entry-title">Spiel erfassen</h2></div>
+<form id="game-form"><label for="game">Nächstes Spiel</label><select id="game" disabled></select><p id="mode" class="muted"></p>
+<div class="row-label"><h3>Wer hat mitgespielt?</h3><span>Platz</span></div><div id="players"></div>
+<p class="hint">Gleichstand? Gleichen Platz wählen. Danach Plätze überspringen: 1, 2, 2, 4.</p>
+<label id="reason-label" hidden>Korrekturgrund<input id="reason" minlength="5" maxlength="500"></label><button type="submit" id="review" disabled>Punkte prüfen <span aria-hidden="true">→</span></button></form>
+<p id="message" role="status" aria-live="polite"></p>
+<section id="preview" hidden aria-labelledby="preview-title"><div class="section-heading"><span class="step">02</span><h2 id="preview-title">Ergebnis prüfen</h2></div><div class="table-scroll"><table><thead><tr><th>Spieler</th><th>Basis</th><th>Faktor</th><th>Punkte</th></tr></thead><tbody id="preview-rows"></tbody></table></div><p class="hint">Der Faktor gilt vor diesem Spiel. Beim Speichern wird der aktuelle Tabellenstand erneut geprüft.</p><button id="save" type="button">Ergebnis speichern</button></section></section>
+<aside><div class="section-heading"><span class="step">03</span><h2>Rangliste</h2></div><div id="standings"></div><p class="hint">3 · 2 · 1 Grundpunkte. Handicap ab Spieltag 7.</p><a id="sheet-link" hidden target="_blank" rel="noopener">Tabelle öffnen ↗</a></aside></div>
+<footer>COMMANDER LEAGUE <span>Ein Spiel. Alle Punkte im Blick.</span></footer>
+</main><script src="scoring.js"></script><script src="app.js"></script></body></html>
