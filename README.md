@@ -1,39 +1,47 @@
 # Commander League
 
-A mobile-friendly score-entry app for a casual MTG Commander league. Select participants and placements, review base points and handicaps, then save into the existing **Spiele** tab. Sheets remains the source of truth.
+An invitation-only browser app for a casual MTG Commander league. No Google or ChatGPT account is needed by league members.
 
-## Two editions, one interface
+## Version 0.2
 
-- **Demo:** `dist/index.html`, served as a static website. Fictional players, in-memory results, no spreadsheet connection. Reload resets everything.
-- **Live:** `apps-script/Index.html` and the two `.gs` files, hosted as a Google Apps Script web app. Reads the sheet at runtime and writes only the eight base-point cells for the next prepared game.
+- Members view standings, game results, dates and the configured handicap mode.
+- Managers enter results and correct existing games with a reason.
+- The owner invites email addresses, assigns multiple managers, demotes them and revokes access.
+- Passwordless email links expire after 15 minutes and work once. Sessions use a Secure, HttpOnly, SameSite cookie and expire after 30 days.
+- Revocation and role changes invalidate sessions and outstanding login links.
+- A shared league link or QR opens sign-in; it does not itself grant membership or manager access.
+- Results and subsequent handicaps are recalculated from the complete game history.
+- Role enforcement, validation, stale-preview rejection and save serialization happen on the server.
+- The audit log records actor, time, before/after data and correction reasons. Uncertain remote writes block further writes until the owner reconciles them.
 
-Live Google authorization and deployment are not performed by committing this repository. Follow [the setup guide](SETUP.md).
+## Architecture
 
-## Implemented
+The Worker serves the UI and API. D1 stores membership, hashed login/session tokens, rate limits, audit history and the write lock. Google Sheets remains the source of truth for base points, dates and handicap rules. A Google service account connects the server to the sheet. Resend delivers sign-in emails. Neither service is called directly from the browser.
 
-- Participant selection, placements and tied-place scoring (1, 2, 2, 4).
-- Point preview using the current league leader, including absent players.
-- Per-game or per-day handicap from each game's existing setting.
-- Fractional points without rounding stored values.
-- Server-side recalculation, stale-preview detection and a script lock against competing app submissions.
-- Existing games cannot be overwritten or accidentally saved twice by retrying a request.
-- Standings and an explicit demo/live indicator.
+The Apps Script edition was removed; it does not satisfy account-independent membership and multiple manager roles. Follow [SETUP.md](SETUP.md) for the new deployment.
+
+The current spreadsheet contract is eight players and 35 prepared game slots: `Spiele!A1:N36` and `Regeln!B2:B12`. Changes to that structure require an adapter update. The app does not silently invent new rows or players. Original placements for new/corrected games are retained in the audit record. Historical games originally recorded only as base points cannot have every placement reconstructed, so corrections require re-entering the participants and placements.
 
 ## Development
 
-Requires Node.js 20+; no third-party packages or installation needed.
+Node 24+ is required for SQLite-backed tests. Runtime code has no external JS packages; Drizzle is used only to generate database migrations.
 
 ```sh
-npm test
+npm install
 npm run build
+npm test
 ```
 
-The build regenerates Apps Script HTML and its shared scoring code from `dist/`. Edit `dist/` for UI/scoring and `apps-script/Code.gs` for the backend. Commit generated Apps Script files so setup requires no local development tools. No GitHub Actions workflow is installed.
+For a schema change, edit `db/schema.ts`, then run `npm run db:generate`. Inspect the generated SQL; never rewrite a migration already applied to a deployment. No GitHub Actions workflow is installed.
 
-## Scope and constraints
+UI sources live in `dist/`. `scripts/build.cjs` creates a Worker build in `dist/server/`, embeds the public assets, and copies migrations into `dist/.openai/`. `server/scoring.mjs` is generated from the browser scoring module.
 
-Version 0.1 targets the current eight-player, 35-game prepared workbook layout (`Spiele!A1:N36`, `Wertung!C2:K281`, `Regeln!B2:B12`). It records only the next empty game, preserving chronological handicap calculations. More players, extra game slots, editing old results and new seasons need explicit schema support before use. Placements are converted to base points; the sheet does not yet persist the original placements independently. Global rule changes remain retrospective in the sheet.
+## Validation and remaining setup
 
-For now, make direct spreadsheet edits between app submissions, not simultaneously. Apps Script locks serialize this app's writes; they do not lock out manual edits or other scripts. If a save reports an error after writing, reload: the saved row remains and cannot be submitted again.
+Automated tests exercise scoring, server route authorization, real SQLite queries, token redemption, revocation, concurrent saves, stale previews and uncertain-write recovery. The Google and email integrations need real credentials and an end-to-end trial against a copied sheet before live league use. Unit tests use fake addresses and a fake Sheets adapter; they send no email and change no Google data.
 
-The hosted demo uses fictional data. No sheet ID, league history, account credentials or access tokens belong in this public repository. Actual Google deployment and a round-trip test against a copied spreadsheet are still required before live use.
+The `/demo` route uses fictional players and memory-only results. The main route is the real sign-in surface; without configuration it explains that the league is not ready. The committed QR contains only the public sign-in URL.
+
+Manual spreadsheet edits and other scripts are not covered by the app's write lock. Make those edits between app operations; the revision check detects edits before a save but the Google values API does not provide a conditional row-write transaction. After a correction, subsequent handicaps may change intentionally. Global rule changes remain retrospective until rule versioning is added.
+
+The email ownership and Google service-account keys are configured as server-side runtime secrets, never committed. A public hosting audience exposes the sign-in page, not private league data. Every league API requires an active app session.

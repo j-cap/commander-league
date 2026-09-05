@@ -20,4 +20,4 @@ var League = (() => {
   }
   return {score, factor};
 })();
-if (typeof module !== 'undefined') module.exports = League;
+export { League };

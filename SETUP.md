@@ -1,67 +1,66 @@
-# Set up the live app (first deployment)
+# Live setup: email invitations and manager roles
 
-Use a computer for the one-time setup. Afterwards, the web app works from a phone browser.
+This replaces the earlier Apps Script instructions. Do not deploy the old Google-account-only app.
 
-## 1. Start with a test copy
+## What is already built
 
-In Google Sheets, choose **File → Make a copy** of the league workbook. Keep all four tabs. Use this copy for the first save test so the league standings are not changed by practice results.
+The login page, member view, manager result entry and corrections, owner access management, QR invitation, audit trail, database schema and server adapters are implemented. Real email delivery and Google access still need to be connected. No invitations have been sent and no live results have been written by this version.
 
-## 2. Create the Apps Script project
+## 1. Set the owner address
 
-Open the copy and choose **Extensions → Apps Script**. Name the project **Commander League**.
+Choose the email address you will use as league owner. Configure it as `OWNER_EMAIL` in the hosting runtime settings. This is the only address that can bootstrap the owner account; it must verify a sign-in email before obtaining a session. Other addresses must be invited by that owner.
 
-Copy the complete contents of these repository files into the script editor:
+Use the exact deployed HTTPS origin as `APP_ORIGIN`, without a trailing slash. The current app origin is https://commander-league-demo.jakobweber.chatgpt.site.
 
-| Repository file | Apps Script file |
-| --- | --- |
-| `apps-script/Code.gs` | Replace the default `Code.gs` |
-| `apps-script/Scoring.gs` | Add a Script file named `Scoring` |
-| `apps-script/Index.html` | Add an HTML file named `Index` |
+## 2. Connect email delivery
 
-Use GitHub's **Raw** view when copying. The HTML is already built and self-contained.
+The prepared adapter uses Resend. Create an account, verify a sender domain that you control, and create a sending API key. Configure:
 
-## 3. Point it at the test spreadsheet
+- `RESEND_API_KEY`: server-side API key.
+- `MAIL_FROM`: a sender address on the verified domain, such as Commander League <league@your-domain.example>.
 
-In Apps Script **Project Settings → Script properties**, add:
+Any email provider can receive the sign-in links. League members need no Resend accounts. Provider account/domain setup and any paid plan are the owner's decisions; no purchase or email dispatch was performed here.
 
-- Property: `SPREADSHEET_ID`
-- Value: the ID between `/d/` and `/edit` in the copied spreadsheet URL.
+If you do not have a domain, discuss an alternative delivery provider before purchasing one. The adapter is isolated in `server/auth.mjs`.
 
-Keep this configuration in Google, not in GitHub. Save the project.
+## 3. Connect Google Sheets
 
-## 4. Deploy for yourself
+Start with a **copy** of the league workbook.
 
-Choose **Deploy → New deployment → Web app**.
+In a Google Cloud project you control, enable the Google Sheets API, create a service account, and create its JSON key. Share only the test spreadsheet with the service account email as an editor. Configure these as private server runtime values:
 
-- **Execute as:** Me.
-- **Who has access:** Only myself.
+- `SPREADSHEET_ID`: the ID of the test spreadsheet.
+- `GOOGLE_SERVICE_ACCOUNT_EMAIL`: the JSON key's client_email.
+- `GOOGLE_PRIVATE_KEY`: the JSON key's private_key, including its BEGIN/END lines.
 
-Deploy and authorize the script using the Google account that can edit the test spreadsheet. Review that the authorization request is for this script and its spreadsheet access. Copy the resulting web app URL ending in `/exec` and open it. Do not make an owner-executed web app anonymously accessible.
+You perform this Google setup once as the owner. Members never sign in to Google or receive spreadsheet permissions. Do not paste the JSON key into GitHub, public chat, the frontend or a URL.
 
-## 5. Verify one real round trip
+## 4. Deploy storage and app
 
-1. Confirm the app shows the names, scores and next prepared game from the test copy.
-2. Select four players and enter places **1, 2, 2, 4**.
-3. Check base points **3, 1.5, 1.5, 0**, and the individual handicaps.
-4. Save. Confirm the correct row in **Spiele** contains those base points, with absent players blank.
-5. Confirm **Wertung** and **Rangliste** update and the app moves to the next game.
-6. Open the app in two tabs. After saving in one, the old preview in the other must be rejected.
+The Sites manifest declares the logical D1 binding `DB`. The Worker build includes generated Drizzle migrations; the hosting flow provisions storage and applies them before serving the Worker. Never seed personal email addresses in migrations.
 
-Test the per-day option only on the copy, selecting the same mode for every game of that day. Never change past modes on the live sheet just to test.
+The production site must allow visitors to reach the sign-in page without platform sign-in. Private league access is enforced by the application's session and membership checks. Keep the service-account/email secrets server-side.
 
-## 6. Switch to the real league
+## 5. Test before switching to the real sheet
 
-After the test succeeds, change `SPREADSHEET_ID` to the real league spreadsheet ID. Reload the app and verify the current standings before saving. You can keep the same script and deployment. Add the app URL to your phone home screen if convenient.
+1. Sign in as the configured owner; confirm the email link works once and expires.
+2. Invite a second email as a member. Share the app link or QR. Confirm this member can view but cannot enter or correct results.
+3. Promote that member to manager. They sign in again, then record places 1, 2, 2, 4 on the test sheet: base points must be 3, 1.5, 1.5, 0.
+4. Verify the sheet's Wertung and Rangliste agree with the app after the save.
+5. Correct the game with a reason and verify subsequent handicap changes. Review the before/after audit record.
+6. Revoke the manager and confirm their existing session cannot read or write anymore.
+7. Use two browser sessions to confirm a stale preview cannot overwrite another manager's result.
+8. If a save reports an uncertain status, do not re-enter it. The owner uses “Offenen Speichervorgang prüfen” after two minutes. It compares the actual sheet row to both versions, records the outcome and releases the lock only if unambiguous.
 
-The first edition is for the organizer. Before granting the whole group access, decide who may submit results. An option is execution as the accessing user, requiring each submitter's Google authorization and spreadsheet edit access. This is a separate access decision, not enabled by the initial deployment.
+After these pass, share the real spreadsheet with the service account and change `SPREADSHEET_ID`. Reload and verify all existing league totals before entering a real game.
 
-## Updating the app later
+## Invitations and QR
 
-Replace the three script files with the new repository version, then **Deploy → Manage deployments → Edit → New version → Deploy**. The existing app URL stays the same.
+Owner → Zugänge verwalten → enter email → select member or manager → Adresse freigeben. The owner can copy the league link or download the QR and distribute it. Creating an invitation grants eligibility; the member requests their own email sign-in link. The app does not automatically email everyone or reveal whether arbitrary addresses are members.
 
-## Google documentation
+The QR currently encodes the deployed app origin. For a different domain, regenerate it with `scripts/generate_qr.py` (requires Python reportlab) and update the QR-origin check in portal.js. A shared QR must never embed a session or manager token.
 
-- [Deploy a web app and choose its execution identity](https://developers.google.com/apps-script/guides/web)
-- [Browser-to-server calls with google.script.run](https://developers.google.com/apps-script/guides/html/communication)
+## Sources
 
-The ChatGPT Google Drive connection does not automatically authorize or deploy this separate application. Its first authorization must happen in your Google account.
+- [Google service-account authorization](https://developers.google.com/identity/protocols/oauth2/service-account)
+- [Resend email API](https://resend.com/docs/api-reference/emails/send-email)
