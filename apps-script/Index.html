@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Commander-Liga: Platzierungen erfassen, Punkte prüfen und Rangliste ansehen."><title>Commander League</title><style>:root{color-scheme:dark;--bg:#101316;--panel:#191e23;--line:#343b43;--text:#f5f5ef;--muted:#aeb7c0;--accent:#c7f36b}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,sans-serif}main{max-width:1120px;margin:auto;padding:38px 28px}header,.brand,.section-heading,.row-label,.player,.standing,footer{display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{justify-content:flex-start}.mark{border:1px solid var(--accent);color:var(--accent);padding:13px 10px;font-weight:800;letter-spacing:-1px;font-size:24px}.eyebrow{font-size:12px;letter-spacing:.17em;color:var(--accent);margin:0 0 4px}h1{font-size:clamp(25px,4vw,38px);letter-spacing:-.04em;margin:0;line-height:1.2}h2{font-size:23px;letter-spacing:-.025em;margin:0}h3{font-size:16px;margin:0}.season{font-size:13px;color:var(--muted);letter-spacing:.08em}.notice{border-left:3px solid var(--accent);background:#20271b;padding:14px 18px;margin:30px 0}.workspace{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:36px}.entry,aside{background:var(--panel);border:1px solid var(--line);padding:26px}.section-heading{justify-content:flex-start;margin-bottom:24px}.step{color:var(--accent);font-size:13px;border-bottom:1px solid var(--accent);padding-bottom:3px}label{display:block}select{width:100%;font:inherit;background:#101519;border:1px solid #535d68;border-radius:5px;color:var(--text);padding:12px;margin-top:7px;min-height:46px}.muted,.hint{color:var(--muted);font-size:14px}.row-label{margin:25px 0 6px}.row-label>span{font-size:14px;color:var(--muted)}.player{padding:9px 0;border-bottom:1px solid var(--line)}.player label{display:flex;align-items:center;gap:12px;flex:1;min-width:0;overflow-wrap:anywhere}.player input{width:22px;height:22px;accent-color:var(--accent);flex-shrink:0}.player select{width:85px;margin:0;padding:8px}.player select:disabled{opacity:.3}button{width:100%;border:0;border-radius:5px;background:var(--accent);color:#142007;padding:14px 18px;font:700 16px/1.5 system-ui;cursor:pointer;margin-top:12px}button:disabled{opacity:.45;cursor:not-allowed}button span{float:right}:focus-visible{outline:3px solid #fff;outline-offset:4px}#message{white-space:pre-line;color:#f9d78c}#preview{margin-top:30px;border-top:1px solid var(--line);padding-top:24px}table{width:100%;border-collapse:collapse}th,td{text-align:right;padding:12px 5px;border-bottom:1px solid var(--line)}th:first-child,td:first-child{text-align:left;overflow-wrap:anywhere}th{font-size:13px;color:var(--muted)}.standing{padding:17px 0;border-bottom:1px solid var(--line)}.standing .rank{font-size:14px;color:var(--muted);width:22px}.standing .name{flex:1;overflow-wrap:anywhere}.standing strong{font-size:24px;font-variant-numeric:tabular-nums}.standing:first-child strong{color:var(--accent)}.standing small{display:block;font-size:12px;color:var(--muted)}a{color:var(--accent);font-size:14px}.table-scroll{overflow:auto}footer{margin-top:35px;padding-top:20px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);letter-spacing:.06em}footer span{letter-spacing:0} [hidden]{display:none!important}@media(max-width:740px){main{padding:22px 16px}.workspace{grid-template-columns:1fr;gap:20px}.entry,aside{padding:20px}.season{display:none}header{margin-top:8px}footer{align-items:flex-start;flex-direction:column}}@media(prefers-reduced-motion:no-preference){button:hover:not(:disabled){filter:brightness(1.1)}}
+</style></head>
+<body><main>
+<header><div class="brand"><span class="mark" aria-hidden="true">CL</span><div><p class="eyebrow">CASUAL COMMANDER</p><h1>Die Liga am Tisch.</h1></div></div><span class="season">SEASON 2026</span></header>
+<p id="connection" class="notice" role="status">Liga wird geladen …</p>
+<div class="workspace"><section class="entry" aria-labelledby="entry-title"><div class="section-heading"><span class="step">01</span><h2 id="entry-title">Spiel erfassen</h2></div>
+<form id="game-form"><label for="game">Nächstes Spiel</label><select id="game" disabled></select><p id="mode" class="muted"></p>
+<div class="row-label"><h3>Wer hat mitgespielt?</h3><span>Platz</span></div><div id="players"></div>
+<p class="hint">Gleichstand? Gleichen Platz wählen. Danach Plätze überspringen: 1, 2, 2, 4.</p>
+<button type="submit" id="review" disabled>Punkte prüfen <span aria-hidden="true">→</span></button></form>
+<p id="message" role="status" aria-live="polite"></p>
+<section id="preview" hidden aria-labelledby="preview-title"><div class="section-heading"><span class="step">02</span><h2 id="preview-title">Ergebnis prüfen</h2></div><div class="table-scroll"><table><thead><tr><th>Spieler</th><th>Basis</th><th>Faktor</th><th>Punkte</th></tr></thead><tbody id="preview-rows"></tbody></table></div><p class="hint">Der Faktor gilt vor diesem Spiel. Beim Speichern wird der aktuelle Tabellenstand erneut geprüft.</p><button id="save" type="button">Ergebnis speichern</button></section></section>
+<aside><div class="section-heading"><span class="step">03</span><h2>Rangliste</h2></div><div id="standings"></div><p class="hint">3 · 2 · 1 Grundpunkte. Handicap ab Spieltag 7.</p><a id="sheet-link" hidden target="_blank" rel="noopener">Tabelle öffnen ↗</a></aside></div>
+<footer>COMMANDER LEAGUE <span>Ein Spiel. Alle Punkte im Blick.</span></footer>
+</main><script>/* Shared by the browser, Apps Script and Node tests. */
+var League = (() => {
+  function score(entries, awards = [3, 2, 1]) {
+    if (!Array.isArray(entries) || entries.length < 3) throw Error('Mindestens drei Teilnehmer auswählen.');
+    if (new Set(entries.map(e => e.player)).size !== entries.length) throw Error('Spieler doppelt ausgewählt.');
+    entries.forEach(e => { if (!Number.isInteger(e.rank) || e.rank < 1 || e.rank > entries.length) throw Error('Gültige Platzierungen eintragen.'); });
+    const ranks = [...new Set(entries.map(e => e.rank))].sort((a,b) => a-b);
+    let next = 1;
+    const points = {};
+    ranks.forEach(rank => {
+      if (rank !== next) throw Error('Nach einem Gleichstand die belegten Plätze überspringen, z. B. 1, 2, 2, 4.');
+      const count = entries.filter(e => e.rank === rank).length;
+      points[rank] = Array.from({length: count}, (_,i) => awards[rank+i-1] || 0).reduce((a,b) => a+b,0) / count;
+      next += count;
+    });
+    return entries.map(e => ({...e, base: points[e.rank]}));
+  }
+  function factor(gap, day, rules) {
+    return day < rules.start ? rules.normal : gap >= rules.high ? rules.highFactor : gap >= rules.low ? rules.midFactor : rules.normal;
+  }
+  return {score, factor};
+})();
+if (typeof module !== 'undefined') module.exports = League;
+</script><script>const $ = id => document.getElementById(id);
+const live = typeof google !== 'undefined' && google.script && google.script.run;
+let state, pending, busy = false;
+const number = x => Number(x).toLocaleString('de-AT',{maximumFractionDigits:2});
+const rpc = (name, payload) => new Promise((resolve,reject) => { const runner = google.script.run.withSuccessHandler(resolve).withFailureHandler(reject); if (payload === undefined) runner[name](); else runner[name](payload); });
+function demo(){return {players:['Spieler A','Spieler B','Spieler C','Spieler D','Spieler E','Spieler F'],totals:[12,8,6,4,3,0],played:[5,5,4,3,2,0],game:{id:24,day:9,date:'26.09.2026',mode:'Pro Spiel'},rules:{start:7,low:3,high:6,normal:1,midFactor:1.5,highFactor:2,awards:[3,2,1]},baseline:[12,8,6,4,3,0],revision:'demo'};}
+function make(tag,text,cls){const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;}
+function render(){
+  $('connection').textContent=live?'Mit Google Sheets verbunden':'DEMO · Fiktive Spieler und Punkte. Speichern gilt nur für diese Sitzung; die Google-Tabelle bleibt unverändert.';
+  $('game').replaceChildren(make('option',state.game?`${state.game.date} · Spieltag ${state.game.day} · Spiel ${state.game.id}`:'Keine freien Spiele vorbereitet'));
+  $('mode').textContent=state.game?`Handicap: ${state.game.mode.toLowerCase()}`:'';
+  $('players').replaceChildren();
+  state.players.forEach((name,i)=>{const row=make('div',undefined,'player');const label=make('label');const check=make('input');check.type='checkbox';check.dataset.index=i;label.append(check,make('span',name));const select=make('select');select.id=`rank-${i}`;select.setAttribute('aria-label',`Platz für ${name}`);select.disabled=true;select.append(new Option('—',''));for(let k=1;k<=state.players.length;k++)select.append(new Option(String(k),String(k)));check.addEventListener('change',()=>{select.disabled=!check.checked;invalidate();});select.addEventListener('change',invalidate);row.append(label,select);$('players').append(row);});
+  $('standings').replaceChildren();
+  state.players.map((name,i)=>({name,points:state.totals[i],played:state.played[i]})).sort((a,b)=>b.points-a.points||a.name.localeCompare(b.name)).forEach(p=>{const row=make('div',undefined,'standing');const rank=1+state.totals.filter(v=>v>p.points+1e-9).length;const name=make('div',p.name,'name');name.append(make('small',`${p.played} Spiele`));row.append(make('span',String(rank),'rank'),name,make('strong',number(p.points)));$('standings').append(row);});
+  $('review').disabled=!state.game; if(state.sheetUrl){$('sheet-link').href=state.sheetUrl;$('sheet-link').hidden=false;}
+}
+function invalidate(){pending=null;$('preview').hidden=true;$('message').textContent='';}
+$('game-form').addEventListener('submit',event=>{event.preventDefault();if(busy)return;invalidate();try{
+  const entries=[...$('players').querySelectorAll('input:checked')].map(c=>({player:Number(c.dataset.index),rank:Number($(`rank-${c.dataset.index}`).value)}));
+  const scored=League.score(entries,state.rules.awards);const lead=Math.max(...state.baseline);
+  $('preview-rows').replaceChildren();scored.forEach(e=>{const factor=League.factor(lead-state.baseline[e.player],state.game.day,state.rules);const row=make('tr');[state.players[e.player],number(e.base),`×${number(factor)}`,number(e.base*factor)].forEach(v=>row.append(make('td',v)));$('preview-rows').append(row);});
+  pending={gameId:state.game.id,revision:state.revision,entries};$('save').textContent=live?'In Google Sheets speichern':'Demo-Ergebnis speichern';$('preview').hidden=false;
+}catch(error){$('message').textContent=error.message;}});
+$('save').addEventListener('click',async()=>{if(!pending||busy)return;busy=true;$('save').disabled=true;$('review').disabled=true;const request=pending;
+try{if(live){state=await rpc('saveGame',request);}else{League.score(request.entries,state.rules.awards).forEach(e=>{state.totals[e.player]+=e.base*League.factor(Math.max(...state.baseline)-state.baseline[e.player],state.game.day,state.rules);state.played[e.player]++;});state.game.id++;state.baseline=[...state.totals];}
+invalidate();render();$('message').textContent=live?'Gespeichert. Die Rangliste ist aktualisiert.':'Demo gespeichert. Neuladen setzt die Beispieldaten zurück.';
+}catch(error){$('message').textContent=error.message+' Lade die Seite neu, um den aktuellen Stand zu prüfen. Bereits gespeicherte Ergebnisse werden nicht überschrieben.';}finally{busy=false;$('save').disabled=false;$('review').disabled=!state.game;}});
+(async()=>{try{state=live?await rpc('getLeague'):demo();render();}catch(error){$('connection').textContent='Verbindung fehlgeschlagen: '+error.message;}})();
+</script></body></html>
