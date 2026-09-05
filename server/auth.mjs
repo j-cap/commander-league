@@ -1,10 +1,11 @@
+import {mailConfigured,sendMail} from './mail.mjs';
 import {email,random,hash,now,one,all,run,stmt,fail,origin} from './util.mjs';
 export const COOKIE='__Host-cl_session';
 export function cookie(token,age=2592000){return `${COOKIE}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${age}`;}
 export async function member(request,env,roles){const token=request.headers.get('Cookie')?.split(';').map(v=>v.trim()).find(v=>v.startsWith(COOKIE+'='))?.slice(COOKIE.length+1);if(!token||!/^[a-f0-9]{64}$/.test(token))fail(401,'Bitte anmelden.');const m=await one(env,'SELECT m.email,m.role,m.status FROM sessions s JOIN members m ON s.email=m.email WHERE s.hash=? AND s.expires>?',await hash(token),now());if(!m||m.status!=='active')fail(401,'Bitte erneut anmelden oder Zugang freigeben lassen.');if(roles&&!roles.includes(m.role))fail(403,'Für diese Aktion fehlen die Berechtigungen.');return m;}
 async function limit(env,key,max){const t=now(),bucket=Math.floor(t/600);const k=await hash(key)+':'+bucket;const r=await one(env,'INSERT INTO rates(key,count,expires) VALUES(?,1,?) ON CONFLICT(key) DO UPDATE SET count=count+1 RETURNING count',k,t+1200);if(r.count>max)fail(429,'Zu viele Versuche. Bitte in zehn Minuten erneut versuchen.');}
 export async function startLogin(request,env,input){
- const address=email(input.email);if(!env.RESEND_API_KEY||!env.MAIL_FROM||!env.OWNER_EMAIL)fail(503,'E-Mail-Anmeldung ist noch nicht eingerichtet.');
+ const address=email(input.email);if(!mailConfigured(env)||!env.OWNER_EMAIL)fail(503,'E-Mail-Anmeldung ist noch nicht eingerichtet.');
  await limit(env,'ip:'+request.headers.get('CF-Connecting-IP'),12);await limit(env,'email:'+address,3);await limit(env,'global',100);
  await env.DB.batch([stmt(env,'DELETE FROM tokens WHERE expires<?',now()),stmt(env,'DELETE FROM sessions WHERE expires<?',now()),stmt(env,'DELETE FROM rates WHERE expires<?',now())]);
  if(address===email(env.OWNER_EMAIL))await run(env,"INSERT OR IGNORE INTO members(email,role,status,created) VALUES(?,'owner','active',?)",address,now());
@@ -12,7 +13,7 @@ export async function startLogin(request,env,input){
  if(m&&m.status!=='revoked'){
    const token=random(),digest=await hash(token);await run(env,'INSERT INTO tokens(hash,email,expires) VALUES(?,?,?)',digest,address,now()+900);
    const link=origin(env)+'/#token='+token;
-   const result=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:'Bearer '+env.RESEND_API_KEY,'Content-Type':'application/json'},body:JSON.stringify({from:env.MAIL_FROM,to:[address],subject:'Dein Zugang zur Commander League',text:`Öffne diesen Link und bestätige die Anmeldung:\n${link}\n\nDer Link gilt 15 Minuten und kann einmal verwendet werden. Falls du keine Anmeldung angefordert hast, ignoriere diese Nachricht.`}),signal:AbortSignal.timeout(15000)}).catch(()=>null);
+   const result=await sendMail(env,address,'Dein Zugang zur Commander League',`Öffne diesen Link und bestätige die Anmeldung:\n${link}\n\nDer Link gilt 15 Minuten und kann einmal verwendet werden. Falls du keine Anmeldung angefordert hast, ignoriere diese Nachricht.`).catch(()=>null);
    if(!result?.ok){await run(env,'DELETE FROM tokens WHERE hash=?',digest);fail(503,'E-Mail konnte gerade nicht versendet werden. Bitte später versuchen.');}
  }
  return {message:'Wenn deine Adresse eingeladen ist, erhältst du einen Anmeldelink. Prüfe auch den Spamordner.'};

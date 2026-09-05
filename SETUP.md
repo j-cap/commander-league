@@ -14,14 +14,25 @@ Use the exact deployed HTTPS origin as `APP_ORIGIN`, without a trailing slash. T
 
 ## 2. Connect email delivery
 
-The prepared adapter uses Resend. Create an account, verify a sender domain that you control, and create a sending API key. Configure:
+Two interchangeable senders are supported. Changing the sender does not change league membership, roles or results.
 
-- `RESEND_API_KEY`: server-side API key.
-- `MAIL_FROM`: a sender address on the verified domain, such as Commander League <league@your-domain.example>.
+### Gmail (initial setup)
 
-Any email provider can receive the sign-in links. League members need no Resend accounts. Provider account/domain setup and any paid plan are the owner's decisions; no purchase or email dispatch was performed here.
+Set `MAIL_PROVIDER=gmail` and `GMAIL_SENDER` to the owner's chosen Gmail address in private hosting settings. Do not commit the real address or credentials to this public repository.
 
-If you do not have a domain, discuss an alternative delivery provider before purchasing one. The adapter is isolated in `server/auth.mjs`.
+1. Create a Google Cloud project called **Commander League** and enable the **Gmail API**.
+2. Configure Google Auth Platform branding/audience for your own use. During testing, add only your sender account as a test user.
+3. Create a Web application OAuth client. For the one-time setup through Google's OAuth Playground, register `https://developers.google.com/oauthplayground` as an authorized redirect URI.
+4. In OAuth Playground settings, enable **Use your own OAuth credentials** and enter that client's ID and secret. Request only `https://www.googleapis.com/auth/gmail.send`, using offline access. Authorize with the exact account chosen as `GMAIL_SENDER`, then exchange the authorization code for tokens.
+5. Store `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET` and `GMAIL_REFRESH_TOKEN` in private hosting runtime settings. Mark the client secret and refresh token as secrets. Do not paste them into chat, GitHub or frontend code. The runtime refreshes access tokens before sending.
+6. An external OAuth app in Testing normally has refresh tokens that expire after seven days for this scope. Use testing for the initial trial; resolve publishing status and any applicable Google verification requirements before relying on this sender throughout the league. Revoked/expired authorization requires reconnection.
+
+This setup grants send-only access, not inbox reading. Only the sender authorizes Google; players use the league's existing email links. A ChatGPT Gmail plugin connection does not automatically authorize the deployed app. Delivery failures invalidate the newly created login token and return a generic retry message. No fallback sender is selected automatically.
+
+### Own domain (later)
+
+Set `MAIL_PROVIDER=resend`. Create a Resend account, verify a sender domain you control, and configure `RESEND_API_KEY` and `MAIL_FROM`. Once delivery is verified, remove unused Gmail runtime secrets and revoke the old Google authorization.
+
 
 ## 3. Connect Google Sheets
 
@@ -64,3 +75,7 @@ The QR currently encodes the deployed app origin. For a different domain, regene
 
 - [Google service-account authorization](https://developers.google.com/identity/protocols/oauth2/service-account)
 - [Resend email API](https://resend.com/docs/api-reference/emails/send-email)
+
+- [Gmail send-only scope](https://developers.google.com/workspace/gmail/api/auth/scopes)
+- [Google OAuth Playground](https://developers.google.com/oauthplayground)
+- [Refresh-token expiration](https://developers.google.com/identity/protocols/oauth2#expiration)

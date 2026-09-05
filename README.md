@@ -16,7 +16,7 @@ An invitation-only browser app for a casual MTG Commander league. No Google or C
 
 ## Architecture
 
-The Worker serves the UI and API. D1 stores membership, hashed login/session tokens, rate limits, audit history and the write lock. Google Sheets remains the source of truth for base points, dates and handicap rules. A Google service account connects the server to the sheet. Resend delivers sign-in emails. Neither service is called directly from the browser.
+The Worker serves the UI and API. D1 stores membership, hashed login/session tokens, rate limits, audit history and the write lock. Google Sheets remains the source of truth for base points, dates and handicap rules. A Google service account connects the server to the sheet. Gmail (send-only OAuth) or Resend delivers sign-in emails. Neither service is called directly from the browser.
 
 The Apps Script edition was removed; it does not satisfy account-independent membership and multiple manager roles. Follow [SETUP.md](SETUP.md) for the new deployment.
 
