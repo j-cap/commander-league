@@ -6,7 +6,7 @@ An invitation-only browser app for a casual MTG Commander league. No Google or C
 
 - Members view standings, game results, dates and the configured handicap mode.
 - Managers enter results and correct existing games with a reason.
-- The owner invites email addresses, assigns multiple managers, demotes them and revokes access.
+- The owner sends invitation emails, assigns multiple managers, demotes them and revokes access.
 - Passwordless email links expire after 15 minutes and work once. Sessions use a Secure, HttpOnly, SameSite cookie and expire after 30 days.
 - Revocation and role changes invalidate sessions and outstanding login links.
 - A shared league link or QR opens sign-in; it does not itself grant membership or manager access.

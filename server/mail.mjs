@@ -1,5 +1,6 @@
 // Sender credentials stay in runtime secrets. Switching providers preserves membership.
 export function mailConfigured(env) {
+  if (env.MAIL_TEST) return true;
   if ((env.MAIL_PROVIDER || 'resend') === 'gmail') return !!(env.GMAIL_SENDER && env.GMAIL_CLIENT_ID && env.GMAIL_CLIENT_SECRET && env.GMAIL_REFRESH_TOKEN);
   return (env.MAIL_PROVIDER || 'resend') === 'resend' && !!(env.RESEND_API_KEY && env.MAIL_FROM);
 }
@@ -8,6 +9,7 @@ function base64(text) {
 }
 export async function sendMail(env, to, subject, text) {
   if (!mailConfigured(env)) throw new Error('Mail not configured');
+  if (env.MAIL_TEST) return env.MAIL_TEST.send({to,subject,text});
   if ((env.MAIL_PROVIDER || 'resend') === 'resend') return fetch('https://api.resend.com/emails', {
     method: 'POST', headers: {Authorization: 'Bearer '+env.RESEND_API_KEY, 'Content-Type':'application/json'},
     body: JSON.stringify({from:env.MAIL_FROM,to:[to],subject,text}), signal:AbortSignal.timeout(15000)
