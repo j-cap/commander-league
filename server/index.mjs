@@ -1,7 +1,7 @@
 import {mailConfigured} from './mail.mjs';
 import {assets} from './assets.mjs';
 import {body,json,fail,sameOrigin} from './util.mjs';
-import {member,startLogin,verify,verifyCode,cookie,logout,listMembers,invite,changeMember,resendInvite,removeMember,joinStatus,startJoin,verifyJoin,joinAdmin,configureJoin,decideJoin} from './auth.mjs';
+import {member,startLogin,verify,verifyCode,cookie,logout,listMembers,invite,changeMember,resendInvite,removeMember,joinStatus,startJoin,joinAdmin,configureJoin,decideJoin} from './auth.mjs';
 import {league,saveResult,recover,auditLog} from './results.mjs';
 export default {async fetch(request,env){
  const url=new URL(request.url);let response;
@@ -14,7 +14,6 @@ export default {async fetch(request,env){
    else if(request.method==='POST'&&url.pathname==='/api/login')response=json(await startLogin(request,env,await body(request)));
    else if(request.method==='POST'&&url.pathname==='/api/verify-code')response=json({ok:true},200,{'Set-Cookie':cookie(await verifyCode(request,env,await body(request)))});
    else if(request.method==='POST'&&url.pathname==='/api/join-start')response=json(await startJoin(request,env,await body(request)));
-   else if(request.method==='POST'&&url.pathname==='/api/join-verify')response=json(await verifyJoin(env,await body(request)));
    else if(request.method==='POST'&&url.pathname==='/api/verify')response=json({ok:true},200,{'Set-Cookie':cookie(await verify(env,await body(request)))});
    else if(request.method==='POST'&&url.pathname==='/api/logout'){await logout(request,env);response=json({ok:true},200,{'Set-Cookie':cookie('',0)});}
    else {
