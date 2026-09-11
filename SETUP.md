@@ -10,7 +10,7 @@ The login page, member view, manager result entry and corrections, owner access 
 
 Choose the email address you will use as league owner. Configure it as `OWNER_EMAIL` in the hosting runtime settings. This is the only address that can bootstrap the owner account; it must verify a sign-in email before obtaining a session. Other addresses must be invited by that owner.
 
-Use the exact deployed HTTPS origin as `APP_ORIGIN`, without a trailing slash. The current app origin is https://commander-league-demo.jakobweber.chatgpt.site.
+Use the exact deployed HTTPS origin as `APP_ORIGIN`, without a trailing slash. The current app origin is https://commanderleague.at.
 
 ## 2. Connect email delivery
 
@@ -27,9 +27,9 @@ Set `MAIL_PROVIDER=gmail` and `GMAIL_SENDER` to the owner's chosen Gmail address
 5. Store `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET` and `GMAIL_REFRESH_TOKEN` in private hosting runtime settings. Mark the client secret and refresh token as secrets. Do not paste them into chat, GitHub or frontend code. The runtime refreshes access tokens before sending.
 6. An external OAuth app in Testing normally has refresh tokens that expire after seven days for this scope. Use testing for the initial trial; resolve publishing status and any applicable Google verification requirements before relying on this sender throughout the league. Revoked/expired authorization requires reconnection.
 
-This setup grants send-only access, not inbox reading. Only the sender authorizes Google; players use the league's existing email links. A ChatGPT Gmail plugin connection does not automatically authorize the deployed app. Delivery failures invalidate the newly created login token and return a generic retry message. No fallback sender is selected automatically.
+This setup grants send-only access, not inbox reading. Only the sender authorizes Google; players use the league's existing email links. Delivery failures invalidate the newly created login token and return a generic retry message. No fallback sender is selected automatically.
 
-### Own domain (later)
+### Own domain
 
 Set `MAIL_PROVIDER=resend`. Create a Resend account, verify a sender domain you control, and configure `RESEND_API_KEY` and `MAIL_FROM`. Once delivery is verified, remove unused Gmail runtime secrets and revoke the old Google authorization.
 
