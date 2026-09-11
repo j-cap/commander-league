@@ -1,7 +1,7 @@
 import {mailConfigured} from './mail.mjs';
 import {assets} from './assets.mjs';
 import {body,json,fail,sameOrigin,origin} from './util.mjs';
-import {member,startLogin,verify,cookie,logout,listMembers,invite,changeMember} from './auth.mjs';
+import {member,startLogin,verify,cookie,logout,listMembers,invite,changeMember,resendInvite,removeMember} from './auth.mjs';
 import {league,saveResult,recover,auditLog} from './results.mjs';
 export default {async fetch(request,env){
  const url=new URL(request.url);let response;
@@ -19,6 +19,8 @@ export default {async fetch(request,env){
     else if(request.method==='POST'&&url.pathname==='/api/results'){await member(request,env,['owner','manager']);response=json(await saveResult(request,env,actor,await body(request)));}
     else if(url.pathname==='/api/members'){await member(request,env,['owner']);if(request.method==='GET')response=json({members:await listMembers(env),joinUrl:origin(env)+'/'});else if(request.method==='POST')response=json(await invite(env,actor,await body(request)));}
     else if(request.method==='POST'&&url.pathname==='/api/member'){await member(request,env,['owner']);response=json(await changeMember(env,actor,await body(request)));}
+    else if(request.method==='POST'&&url.pathname==='/api/resend-invite'){await member(request,env,['owner']);response=json(await resendInvite(env,actor,await body(request)));}
+    else if(request.method==='POST'&&url.pathname==='/api/remove-member'){await member(request,env,['owner']);response=json(await removeMember(env,actor,await body(request)));}
     else if(request.method==='GET'&&url.pathname==='/api/audit'){await member(request,env,['owner','manager']);response=json({events:await auditLog(env)});}
     else if(request.method==='POST'&&url.pathname==='/api/recover'){await member(request,env,['owner']);response=json(await recover(env,actor));}
     if(!response)fail(404,'Nicht gefunden.');
