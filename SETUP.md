@@ -67,7 +67,7 @@ After these pass, share the real spreadsheet with the service account and change
 
 ## Invitations and QR
 
-Owner → Zugänge verwalten → enter email → select member or manager → Adresse freigeben. The app immediately emails a single-use invitation link. While the invitation is pending, submitting the same address again resends it. The owner can also copy the league link or download the QR; invited members who open that shared link can request a fresh sign-in email. The app does not reveal whether arbitrary addresses are members.
+Owner → Zugänge verwalten → enter email → select member or manager → Adresse freigeben. The app immediately emails a single-use invitation link. Use **Einladung erneut senden** for an invited or active member when another link is needed. Use **Entfernen** to permanently delete a non-owner membership, its sessions, and open login links. The owner can also copy the league link or download the QR; invited members who open that shared link can request a fresh sign-in email. The app does not reveal whether arbitrary addresses are members.
 
 The QR currently encodes the deployed app origin. For a different domain, regenerate it with `scripts/generate_qr.py` (requires Python reportlab) and update the QR-origin check in portal.js. A shared QR must never embed a session or manager token.
 
