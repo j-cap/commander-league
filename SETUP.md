@@ -54,7 +54,7 @@ The production site must allow visitors to reach the sign-in page without platfo
 
 ## 5. Test before switching to the real sheet
 
-1. Sign in as the configured owner; confirm the email link works once and expires.
+1. Sign in as the configured owner; enter the six-digit code in the original browser and confirm the browser returns directly to the league afterward. Also confirm the fallback email link works once and expires.
 2. Invite a second email as a member. Share the app link or QR. Confirm this member can view but cannot enter or correct results.
 3. Promote that member to manager. They sign in again, then record places 1, 2, 2, 4 on the test sheet: base points must be 3, 1.5, 1.5, 0.
 4. Verify the sheet's Wertung and Rangliste agree with the app after the save.
@@ -67,7 +67,7 @@ After these pass, share the real spreadsheet with the service account and change
 
 ## Invitations, join requests and QR
 
-The login response is deliberately the same for known and unknown addresses. Registered members receive a single-use login link; unknown addresses receive nothing and must use a league join link.
+The login response is deliberately the same for known and unknown addresses. Registered members receive a six-digit code plus a single-use fallback link; unknown addresses receive nothing and must use a league join link. Entering the code in the already open tab ensures the remembered session belongs to the browser the person actually uses. The browser is remembered for six months unless the person logs out, clears site data, or has their role/access changed.
 
 An owner or manager opens **Beitritt verwalten**, chooses a lifetime and optional limit, then shares `https://commanderleague.at/join` or its QR. An applicant enters a name and email address, follows the 30-minute email-verification link, and appears under **Offene Anfragen**. An owner or manager can reject the request or approve it as a member. Approval sends the first single-use login link. A shared link or QR never creates access and never grants manager rights. Only the owner can promote a member under **Zugänge & Rollen**.
 

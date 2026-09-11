@@ -8,7 +8,7 @@ An invitation-only browser app for a casual MTG Commander league. League members
 - Managers enter results and correct existing games with a reason.
 - The owner sends direct invitation emails, assigns multiple managers, demotes them and revokes access.
 - A commissioner can open the shared `/join` link and QR for a limited time and optional number of verified requests. Applicants verify their email before a pending request is created; an owner or manager must approve it.
-- Passwordless email links expire after 15 minutes and work once. Sessions use a Secure, HttpOnly, SameSite cookie and expire after 30 days.
+- Passwordless email codes and fallback links expire after 15 minutes and work once. Entering the code in the original tab keeps that browser signed in for six months with a Secure, HttpOnly, SameSite cookie.
 - Revocation and role changes invalidate sessions and outstanding login links.
 - The shared join link or QR never grants access directly. Approval always creates a member account; only the owner can later promote it to manager.
 - Results and subsequent handicaps are recalculated from the complete game history.
