@@ -1,6 +1,6 @@
 # Commander League
 
-An invitation-only browser app for a casual MTG Commander league. No Google or ChatGPT account is needed by league members.
+An invitation-only browser app for a casual MTG Commander league. League members only need an invited email address.
 
 ## Version 0.2
 
