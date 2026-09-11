@@ -18,11 +18,12 @@ export async function startLogin(request,env,input){
  await env.DB.batch([stmt(env,'DELETE FROM tokens WHERE expires<?',now()),stmt(env,'DELETE FROM sessions WHERE expires<?',now()),stmt(env,'DELETE FROM rates WHERE expires<?',now())]);
  if(address===email(env.OWNER_EMAIL))await run(env,"INSERT OR IGNORE INTO members(email,role,status,created) VALUES(?,'owner','active',?)",address,now());
  const m=await one(env,'SELECT * FROM members WHERE email=?',address);
- if(m&&m.status!=='revoked'){
-   await sendAccessLink(env,address);
- }
- return {message:'Wenn deine Adresse eingeladen ist, erhältst du einen Anmeldelink. Prüfe auch den Spamordner.'};
+ if(!m)return {registered:false,message:'Diese E-Mail-Adresse ist noch nicht für die Liga freigegeben.'};
+ if(m.status==='revoked')return {registered:true,revoked:true,message:'Dieser Zugang ist derzeit gesperrt. Bitte wende dich an den Ligabesitzer.'};
+ await sendAccessLink(env,address);
+ return {registered:true,message:'Anmeldelink versendet. Prüfe bitte auch den Spamordner.'};
 }
+export async function requestInvite(request,env,input){const address=email(input.email);if(!mailConfigured(env)||!env.OWNER_EMAIL)fail(503,'E-Mail-Anmeldung ist noch nicht eingerichtet.');const existing=await one(env,'SELECT status FROM members WHERE email=?',address);if(existing)fail(409,existing.status==='revoked'?'Dieser Zugang ist derzeit gesperrt. Bitte wende dich direkt an den Ligabesitzer.':'Diese Adresse ist bereits freigegeben. Bitte melde dich an.');await limit(env,'request-ip:'+request.headers.get('CF-Connecting-IP'),6);await limit(env,'request-email:'+address,2);await limit(env,'request-global',50);const result=await sendMail(env,email(env.OWNER_EMAIL),'Neue Zugangsanfrage zur Commander League',`${address} möchte der Commander League beitreten.\n\nÖffne ${origin(env)}/ und gib die Adresse unter „Zugänge verwalten“ als Mitglied oder Manager frei. Erst danach erhält die Person eine Einladung.`).catch(()=>null);if(!result?.ok)fail(503,'Die Anfrage konnte gerade nicht gesendet werden. Bitte später erneut versuchen.');return {message:'Anfrage gesendet. Der Ligabesitzer muss deinen Zugang jetzt freigeben.'};}
 export async function verify(env,input){if(typeof input.token!=='string'||!/^[a-f0-9]{64}$/.test(input.token))fail(400,'Ungültiger Anmeldelink.');const token=await one(env,'DELETE FROM tokens WHERE hash=? AND expires>? RETURNING email',await hash(input.token),now());if(!token)fail(401,'Der Link ist abgelaufen oder bereits verwendet.');const session=random(),expiry=now()+2592000;
  const result=await env.DB.batch([stmt(env,"UPDATE members SET status='active' WHERE email=? AND status='invited'",token.email),stmt(env,"INSERT INTO sessions(hash,email,expires) SELECT ?,email,? FROM members WHERE email=? AND status='active'",await hash(session),expiry,token.email)]);
  if(result[1].meta.changes!==1)fail(403,'Dieser Zugang wurde zurückgezogen.');return session;
