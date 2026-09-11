@@ -1,7 +1,7 @@
 import {mailConfigured} from './mail.mjs';
 import {assets} from './assets.mjs';
 import {body,json,fail,sameOrigin,origin} from './util.mjs';
-import {member,startLogin,verify,cookie,logout,listMembers,invite,changeMember,resendInvite,removeMember} from './auth.mjs';
+import {member,startLogin,requestInvite,verify,cookie,logout,listMembers,invite,changeMember,resendInvite,removeMember} from './auth.mjs';
 import {league,saveResult,recover,auditLog} from './results.mjs';
 export default {async fetch(request,env){
  const url=new URL(request.url);let response;
@@ -11,6 +11,7 @@ export default {async fetch(request,env){
    if(request.method==='POST')sameOrigin(request,env);
    if(request.method==='GET'&&url.pathname==='/api/status')response=json({configured:!!(env.APP_ORIGIN&&env.OWNER_EMAIL&&mailConfigured(env)&&env.SPREADSHEET_ID&&env.GOOGLE_SERVICE_ACCOUNT_EMAIL&&env.GOOGLE_PRIVATE_KEY)});
    else if(request.method==='POST'&&url.pathname==='/api/login')response=json(await startLogin(request,env,await body(request)));
+   else if(request.method==='POST'&&url.pathname==='/api/request-invite')response=json(await requestInvite(request,env,await body(request)));
    else if(request.method==='POST'&&url.pathname==='/api/verify')response=json({ok:true},200,{'Set-Cookie':cookie(await verify(env,await body(request)))});
    else if(request.method==='POST'&&url.pathname==='/api/logout'){await logout(request,env);response=json({ok:true},200,{'Set-Cookie':cookie('',0)});}
    else {
